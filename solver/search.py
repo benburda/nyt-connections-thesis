@@ -27,7 +27,7 @@ def greedy_solve(words, embeddings, scored_candidates=None):
     return predicted
 
 
-def beam_solve(words, embeddings, scored_candidates=None, beam_width=25):
+def beam_solve(words, embeddings, scored_candidates=None, beam_width=25, n_groups=None):
     """
     Solver 2/3: Beam search over full partitions (optimized).
     """
@@ -36,9 +36,11 @@ def beam_solve(words, embeddings, scored_candidates=None, beam_width=25):
     else:
         candidates = scored_candidates
 
+    if n_groups is None:
+        n_groups = len(words) // 4
+
     words_set = set(words)
 
-    # filter to only candidates using words in current word set
     valid_candidates = [
         c for c in candidates
         if c["word_set"].issubset(words_set)
@@ -47,7 +49,6 @@ def beam_solve(words, embeddings, scored_candidates=None, beam_width=25):
     if not valid_candidates:
         return []
 
-    # pre-sort by score
     sorted_candidates = sorted(
         valid_candidates,
         key=lambda x: x.get("score", x["cohesion"]),
@@ -56,7 +57,7 @@ def beam_solve(words, embeddings, scored_candidates=None, beam_width=25):
 
     beam = [{"groups": [], "used": frozenset(), "score": 0.0}]
 
-    for _ in range(4):
+    for _ in range(n_groups):
         if not beam:
             break
         next_beam = []
